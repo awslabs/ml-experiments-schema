@@ -12,6 +12,144 @@
  */
 
 {
+  "Parameter": {
+    "title": "Parameter",
+    "properties": {
+      "trackedByUser": {
+        "default": "false",
+        "type": "boolean",
+        "description": "denotes whether the user explicitly tracked this parameter."
+      },
+      "nonDefault": {
+        "default": "false",
+        "type": "boolean",
+        "description": "denotes whether the user explicitly changed this parameter from its default value."
+      },
+      "value": {
+        "minLength": 1,
+        "type": "string",
+        "description": "value of the parameter."
+      },
+      "typing": {
+        "$ref": "#/TypeHint",
+        "description": "type of the parameter."
+      },
+      "name": {
+        "minLength": 1,
+        "type": "string",
+        "description": "name of the parameter."
+      }
+    },
+    "required": [
+      "name",
+      "typing",
+      "value"
+    ],
+    "description": "parameter of the feature transformation.",
+    "type": "object"
+  },
+  "Tag": {
+    "title": "Tag",
+    "properties": {
+      "value": {
+        "minLength": 1,
+        "type": "string",
+        "description": "value of the tag."
+      },
+      "name": {
+        "minLength": 1,
+        "type": "string",
+        "description": "name of the tag."
+      }
+    },
+    "required": [
+      "name",
+      "value"
+    ],
+    "description": "describes tags for the data used for evaluation.",
+    "type": "object"
+  },
+  "ConfusionMatrix": {
+    "properties": {
+      "values": {
+        "items": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "type": "array",
+        "description": "values of the confusion matrix in column-major order."
+      },
+      "classLabels": {
+        "items": {
+          "type": "string"
+        },
+        "type": "array",
+        "description": "labels for the classes represented in the confusion matrix."
+      },
+      "numberOfClasses": {
+        "minimum": 1,
+        "format": "int32",
+        "type": "integer",
+        "description": "number of classes represented in the confusion matrix."
+      }
+    },
+    "required": [
+      "numberOfClasses",
+      "values"
+    ],
+    "description": "a confusion matrix to be stored with evaluation data.",
+    "type": "object"
+  },
+  "Score": {
+    "properties": {
+      "value": {
+        "minLength": 1,
+        "type": "string",
+        "description": "value of the score."
+      },
+      "typing": {
+        "$ref": "#/TypeHint",
+        "description": "type of the value."
+      },
+      "metric": {
+        "minLength": 1,
+        "type": "string",
+        "description": "metric for the score."
+      }
+    },
+    "required": [
+      "metric",
+      "typing",
+      "value"
+    ],
+    "description": "a statistic to be stored with evaluation data.",
+    "type": "object"
+  },
+  "ScoreAtTime": {
+    "properties": {
+      "epoch": {
+        "format": "int32",
+        "type": "integer",
+        "description": "a discrete time unit (e.g. an iteration) to which this score refers to."
+      },
+      "score": {
+        "$ref": "#/Score",
+        "description": "the actual score."
+      },
+      "timestamp": {
+        "minimum": 0,
+        "format": "int64",
+        "type": "integer",
+        "description": "time (milliseconds since 1970-01-01)."
+      }
+    },
+    "required": [
+      "timestamp",
+      "score"
+    ],
+    "description": "a statistic over time to be stored with training metadata.",
+    "type": "object"
+  },
   "Evaluation": {
     "title": "Evaluation",
     "properties": {
@@ -23,35 +161,34 @@
       "name": {
         "minLength": 1,
         "type": "string",
-        "description": "name of this dataset."
+        "description": "name of this evaluation."
       },
       "id": {
         "minLength": 1,
         "type": "string",
         "description": "Unique identifier for this metadata entry."
       },
-      "groupings": {
-        "items": {
-          "$ref": "#/Grouping"
-        },
-        "description": "keys on which the evaluation results are grouped.",
-        "type": "array"
-      },
       "comments": {
         "minLength": 1,
         "type": "string",
         "description": "comments for this evaluation entry."
       },
+      "annotations": {
+        "additionalProperties": {
+          "type": "string"
+        },
+        "type": "object"
+      },
+      "tags": {
+        "items": {
+          "$ref": "#/Tag"
+        },
+        "description": "tags to describe the evaluation data.",
+        "type": "array"
+      },
       "confusionMatrix": {
         "$ref": "#/ConfusionMatrix",
         "description": "an optional confusion matrix to store with the evaluation."
-      },
-      "customStatistics": {
-        "items": {
-          "$ref": "#/CustomStatistic"
-        },
-        "description": "optional custom statistics to store with the evaluation.",
-        "type": "array"
       },
       "scores": {
         "items": {
@@ -76,89 +213,91 @@
         "type": "integer",
         "description": "Creation time (milliseconds since 1970-01-01)."
       },
+      "creatorTeam": {
+        "minLength": 1,
+        "type": "string",
+        "description": "team of the user who created this evaluation."
+      },
       "creator": {
         "minLength": 1,
         "type": "string",
         "description": "name of the user who created this evaluation."
-      },
-      "annotations": {
-        "additionalProperties": {
-          "type": "string"
-        },
-        "type": "object"
       }
     },
     "required": [
-      "creationTime"
+      "creationTime",
+      "computedOnDatasetId",
+      "computedByModelId"
     ],
     "description": "evaluation of predictions of a model on a dataset.",
     "type": "object"
   },
-  "TypedColumn": {
-    "title": "TypedColumn",
+  "DatasetMetadata": {
+    "title": "DatasetMetadata",
     "properties": {
-      "typing": {
-        "$ref": "#/TypeHint",
-        "description": "type of the column."
-      },
-      "name": {
+      "id": {
         "minLength": 1,
         "type": "string",
-        "description": "name of the column."
-      }
-    },
-    "required": [
-      "name",
-      "typing"
-    ],
-    "description": "a column with its type.",
-    "type": "object"
-  },
-  "ModelMetadata": {
-    "title": "ModelMetadata",
-    "properties": {
-      "contentURL": {
+        "description": "Unique identifier for this metadata entry."
+      },
+      "derivedFromDatasetId": {
         "minLength": 1,
         "type": "string",
-        "description": "a pointer to a location where users can read the contents of the model."
-      },
-      "featureTransforms": {
-        "items": {
-          "$ref": "#/FeatureTransform"
-        },
-        "description": "the feature transformations applied to the input data.",
-        "type": "array"
-      },
-      "input": {
-        "items": {
-          "$ref": "#/TypedColumn"
-        },
-        "description": "the input columns which this model consumes from the transformed data.",
-        "type": "array"
-      },
-      "trainingEvolution": {
-        "items": {
-          "$ref": "#/ScoreOverTime"
-        },
-        "type": "array",
-        "description": "statistics gathered during the training of the model."
+        "description": "identified of the metadata of the dataset from which this dataset was derived, if exists."
       },
       "comments": {
         "minLength": 1,
         "type": "string",
-        "description": "comments for this model metadata entry."
+        "description": "comments for this dataset metadata entry."
       },
       "annotations": {
         "additionalProperties": {
           "type": "string"
         },
         "type": "object",
-        "description": "custom key-value data to store with this model metadata entry"
+        "description": "custom key-value data to store with this dataset metadata entry"
       },
       "creator": {
         "minLength": 1,
         "type": "string",
-        "description": "name of the user who created this model."
+        "description": "name of the user who created this dataset."
+      },
+      "histograms": {
+        "items": {
+          "$ref": "#/Histogram"
+        },
+        "type": "array",
+        "description": "histograms related to this dataset."
+      },
+      "dataStatistics": {
+        "items": {
+          "$ref": "#/DataStatistic"
+        },
+        "type": "array",
+        "description": "statistics related to this dataset."
+      },
+      "schema": {
+        "minItems": 1,
+        "items": {
+          "$ref": "#/TypedColumn"
+        },
+        "type": "array",
+        "description": "a description of the names and types of the attributes of the referenced dataset."
+      },
+      "version": {
+        "minLength": 1,
+        "type": "string",
+        "description": "version of the dataset."
+      },
+      "location": {
+        "minLength": 1,
+        "type": "string",
+        "description": "a pointer to the location where users can read the contents of the dataset."
+      },
+      "name": {
+        "minLength": 1,
+        "type": "string",
+        "description": "name of this dataset."
       },
       "creationTime": {
         "minimum": 0,
@@ -166,101 +305,105 @@
         "type": "integer",
         "description": "Creation time (milliseconds since 1970-01-01)."
       },
-      "computationGraph": {
+      "creatorTeam": {
+        "minLength": 1,
+        "type": "string",
+        "description": "team of the user who created this dataset."
+      }
+    },
+    "required": [
+      "name",
+      "location"
+    ],
+    "description": "Metadata describing input datasets.",
+    "type": "object"
+  },
+  "Histogram": {
+    "properties": {
+      "bucketValues": {
         "items": {
-          "$ref": "#/ComputationGraphNode"
+          "type": "string"
         },
-        "description": "computation graph of the model.",
-        "type": "array"
+        "type": "array",
+        "description": "list of values for the buckets of the histogram."
       },
-      "hyperparameters": {
+      "bucketLabels": {
         "items": {
-          "$ref": "#/Parameter"
+          "type": "string"
         },
-        "description": "hyperparameters used when training the model.",
-        "type": "array"
+        "type": "array",
+        "description": "optional list of labels for the buckets of the histogram."
       },
-      "learningAlgorithmVersion": {
-        "minLength": 1,
-        "type": "string",
-        "description": "version of the learning algorithm."
-      },
-      "learningAlgorithm": {
-        "minLength": 1,
-        "type": "string",
-        "description": "name of the learning algorithm that was used to train the model."
-      },
-      "trainedOnDatasetId": {
-        "minLength": 1,
-        "type": "string",
-        "description": "identifier of the dataset on which this model has been trained."
+      "typing": {
+        "$ref": "#/TypeHint",
+        "description": "type of the bucket values."
       },
       "name": {
         "minLength": 1,
         "type": "string",
-        "description": "name of this model metadata entry."
+        "description": "optional name for the histogram."
+      },
+      "column": {
+        "minLength": 1,
+        "type": "string",
+        "description": "name of the column to which this histogram refers."
+      }
+    },
+    "required": [
+      "column",
+      "typing",
+      "bucketValues"
+    ],
+    "description": "a histogram for a column of a dataset.",
+    "type": "object"
+  },
+  "Transform": {
+    "title": "FeatureTransform",
+    "properties": {
+      "name": {
+        "minLength": 1,
+        "type": "string",
+        "description": "name of the feature transformation."
       },
       "id": {
         "minLength": 1,
         "type": "string",
         "description": "Unique identifier for this metadata entry."
-      }
-    },
-    "required": [
-      "creationTime",
-      "name",
-      "trainedOnDatasetId",
-      "learningAlgorithm"
-    ],
-    "description": "Metadata for models trained on an input dataset.",
-    "type": "object"
-  },
-  "ComputationGraphNode": {
-    "title": "ComputationGraphNode",
-    "properties": {
-      "shape": {
-        "items": {
-          "type": "integer"
-        },
-        "type": "array",
-        "description": "shape of the underlying tensor (if any)."
       },
-      "attributes": {
-        "additionalProperties": {
-          "type": "string"
-        },
-        "type": "object",
-        "description": "attributes of the node."
-      },
-      "inputs": {
-        "items": {
-          "type": "integer"
-        },
-        "type": "array",
-        "description": "ids of the nodes that this node take as input."
-      },
-      "name": {
+      "fromFramework": {
         "minLength": 1,
         "type": "string",
-        "description": "name of the node."
+        "description": "framework used to train the model."
       },
-      "id": {
-        "type": "integer",
-        "description": "id of the node."
-      }
-    },
-    "required": [
-      "id",
-      "name",
-      "inputs",
-      "attributes"
-    ],
-    "description": "node of a computation graph.",
-    "type": "object"
-  },
-  "FeatureTransform": {
-    "title": "FeatureTransform",
-    "properties": {
+      "version": {
+        "minLength": 1,
+        "type": "string",
+        "description": "version of the model."
+      },
+      "state": {
+        "minLength": 1,
+        "type": "string",
+        "description": "encoded internal state of the feature transformation (optional)"
+      },
+      "fromFrameworkVersion": {
+        "minLength": 1,
+        "type": "string",
+        "description": "version of the framework used to train the model."
+      },
+      "input": {
+        "items": {
+          "$ref": "#/TypedColumn"
+        },
+        "description": "required input columns for the feature transformation.",
+        "type": "array"
+      },
+      "inputTransforms": {
+        "items": {
+          "type": "string"
+        },
+        "description": "ids of Transforms that produce the input for this Transform in the transformation DAG.",
+        "type": "array"
+      },
       "parameters": {
         "items": {
           "$ref": "#/Parameter"
@@ -274,70 +417,37 @@
         },
         "description": "output columns of the feature transformation.",
         "type": "array"
-      },
-      "input": {
-        "items": {
-          "$ref": "#/TypedColumn"
-        },
-        "description": "required input columns for the feature transformation.",
-        "type": "array"
-      },
-      "state": {
-        "minLength": 1,
-        "type": "string",
-        "description": "encoded internal state of the feature transformation (optional)"
-      },
-      "name": {
-        "minLength": 1,
-        "type": "string",
-        "description": "name of the feature transformation."
       }
     },
     "required": [
-      "name",
-      "input",
-      "output",
-      "parameters"
+      "id",
+      "name"
     ],
-    "description": "feature transformation applied to the columns of the input dataset.",
+    "description": "a transformation applied to the input dataset.",
     "type": "object"
   },
-  "ScoreOverTime": {
-    "properties": {
-      "values": {
-        "items": {
-          "format": "double",
-          "type": "number"
-        },
-        "type": "array"
-      },
-      "metric": {
-        "$ref": "#/Metric",
-        "description": "the metric for which the sequence of scores was computed."
-      }
-    },
-    "required": [
-      "metric",
-      "values"
-    ],
-    "description": "score over time for a metric in an evaluation",
-    "type": "object"
-  },
-  "CustomStatistic": {
+  "DataStatistic": {
     "properties": {
       "value": {
         "minLength": 1,
         "type": "string",
-        "description": "value of the custom statistic."
+        "description": "value of the statistic."
       },
       "typing": {
         "$ref": "#/TypeHint",
-        "description": "type of the custom statistic."
+        "description": "type of the value."
+      },
+      "columns": {
+        "items": {
+          "type": "string"
+        },
+        "type": "array",
+        "description": "columns to which this statistic corresponds. leave this empty for statistics corresponding the whole dataset."
       },
       "name": {
         "minLength": 1,
         "type": "string",
-        "description": "name of the custom statistic."
+        "description": "name of the data statistic."
       }
     },
     "required": [
@@ -345,7 +455,101 @@
       "typing",
       "value"
     ],
-    "description": "a custom statistic to be stored with evaluation data.",
+    "description": "a statistic about a dataset (or columns of it).",
+    "type": "object"
+  },
+  "TrainingRun": {
+    "properties": {
+      "creator": {
+        "minLength": 1,
+        "type": "string",
+        "description": "name of the user who created this model."
+      },
+      "id": {
+        "minLength": 1,
+        "type": "string",
+        "description": "Unique identifier for this metadata entry."
+      },
+      "environment": {
+        "additionalProperties": {
+          "type": "string"
+        },
+        "type": "object",
+        "description": "custom key-value data to store with this training run entry"
+      },
+      "scoresOverTime": {
+        "items": {
+          "$ref": "#/ScoreAtTime"
+        },
+        "description": "scores collected during the training run.",
+        "type": "array"
+      },
+      "hyperparameters": {
+        "items": {
+          "$ref": "#/Parameter"
+        },
+        "description": "hyperparameters used when training the model.",
+        "type": "array"
+      },
+      "transforms": {
+        "items": {
+          "$ref": "#/Transform"
+        },
+        "description": "the transformations applied to the input data.",
+        "type": "array"
+      },
+      "endTime": {
+        "minimum": 0,
+        "format": "int64",
+        "type": "integer",
+        "description": "end time (milliseconds since 1970-01-01)."
+      },
+      "startTime": {
+        "minimum": 0,
+        "format": "int64",
+        "type": "integer",
+        "description": "start time (milliseconds since 1970-01-01)."
+      },
+      "forModelId": {
+        "minLength": 1,
+        "description": "id of the corresponding model metadata entry.",
+        "type": "string"
+      },
+      "name": {
+        "minLength": 1,
+        "type": "string",
+        "description": "name of this training run entry."
+      },
+      "creationTime": {
+        "minimum": 0,
+        "format": "int64",
+        "type": "integer",
+        "description": "Creation time (milliseconds since 1970-01-01)."
+      },
+      "creatorTeam": {
+        "minLength": 1,
+        "type": "string",
+        "description": "team of the user who created this model."
+      },
+      "annotations": {
+        "additionalProperties": {
+          "type": "string"
+        },
+        "type": "object",
+        "description": "custom key-value data to store with this training run entry"
+      },
+      "comments": {
+        "minLength": 1,
+        "type": "string",
+        "description": "comments for this model training run entry."
+      }
+    },
+    "required": [
+      "id",
+      "creationTime",
+      "forModelId"
+    ],
+    "description": "training run of a model.",
     "type": "object"
   },
   "TypeHint": {
@@ -367,116 +571,48 @@
     "description": "describes the type of data items.",
     "type": "string"
   },
-  "DatasetMetadata": {
-    "title": "DatasetMetadata",
+  "TypedColumn": {
+    "title": "TypedColumn",
     "properties": {
-      "contentURL": {
-        "minLength": 1,
-        "type": "string",
-        "description": "a pointer to the location where users can read the contents of the dataset."
+      "typing": {
+        "$ref": "#/TypeHint",
+        "description": "type of the column."
       },
       "name": {
         "minLength": 1,
         "type": "string",
-        "description": "name of this dataset."
-      },
-      "id": {
-        "minLength": 1,
-        "type": "string",
-        "description": "Unique identifier for this metadata entry."
-      },
-      "derivedFromDatasetId": {
-        "minLength": 1,
-        "type": "string",
-        "description": "identified of the metadata of the dataset from which this dataset was derived, if exists."
-      },
-      "cardinality": {
-        "minimum": 1,
-        "format": "int64",
-        "type": "integer",
-        "description": "number of items present in the dataset."
-      },
-      "schema": {
-        "minItems": 1,
-        "items": {
-          "$ref": "#/TypedColumn"
-        },
-        "type": "array",
-        "description": "a description of the names and types of the attributes of the referenced dataset."
-      },
-      "version": {
-        "minLength": 1,
-        "type": "string",
-        "description": "version of the dataset."
-      },
-      "creationTime": {
-        "minimum": 0,
-        "format": "int64",
-        "type": "integer",
-        "description": "Creation time (milliseconds since 1970-01-01)."
-      },
-      "creator": {
-        "minLength": 1,
-        "type": "string",
-        "description": "name of the user who created this dataset."
-      },
-      "annotations": {
-        "additionalProperties": {
-          "type": "string"
-        },
-        "type": "object",
-        "description": "custom key-value data to store with this dataset metadata entry"
-      },
-      "comments": {
-        "minLength": 1,
-        "type": "string",
-        "description": "comments for this dataset metadata entry."
+        "description": "name of the column."
       }
     },
     "required": [
-      "creationTime",
       "name",
-      "contentURL",
-      "version",
-      "cardinality"
+      "typing"
     ],
-    "description": "Metadata describing input datasets.",
+    "description": "a column with its type.",
     "type": "object"
   },
   "PredictionMetadata": {
     "title": "PredictionMetadata",
     "properties": {
-      "name": {
-        "minLength": 1,
-        "type": "string",
-        "description": "name of this prediction."
-      },
-      "id": {
-        "minLength": 1,
-        "type": "string",
-        "description": "Unique identifier for this metadata entry."
-      },
       "computedOnDatasetId": {
         "minLength": 1,
         "type": "string",
         "description": "identifier of the dataset for which these predictions have been computed."
       },
-      "contentURL": {
-        "minLength": 1,
-        "type": "string",
-        "description": "a pointer to the actual prediction data described by the metadata entry."
-      },
-      "schema": {
-        "items": {
-          "$ref": "#/TypedColumn"
-        },
-        "description": "schema for the computed predictions.",
-        "type": "array"
-      },
       "computedByModelId": {
         "minLength": 1,
         "type": "string",
         "description": "identifier of the model that was used to compute these predictions."
+      },
+      "location": {
+        "minLength": 1,
+        "type": "string",
+        "description": "a pointer to the actual prediction data described by the metadata entry."
+      },
+      "comments": {
+        "minLength": 1,
+        "type": "string",
+        "description": "comments for this prediction metadata entry."
       },
       "annotations": {
         "additionalProperties": {
@@ -485,10 +621,17 @@
         "type": "object",
         "description": "custom key-value data to store with this prediction metadata entry"
       },
-      "comments": {
+      "schema": {
+        "items": {
+          "$ref": "#/TypedColumn"
+        },
+        "description": "schema for the computed predictions.",
+        "type": "array"
+      },
+      "creatorTeam": {
         "minLength": 1,
         "type": "string",
-        "description": "comments for this prediction metadata entry."
+        "description": "team of the user who created this prediction."
       },
       "creationTime": {
         "minimum": 0,
@@ -500,139 +643,136 @@
         "minLength": 1,
         "type": "string",
         "description": "name of the user who created this prediction."
+      },
+      "name": {
+        "minLength": 1,
+        "type": "string",
+        "description": "name of this prediction."
+      },
+      "id": {
+        "minLength": 1,
+        "type": "string",
+        "description": "Unique identifier for this metadata entry."
       }
     },
     "required": [
       "creationTime",
       "computedOnDatasetId",
-      "computedByModelId",
-      "schema"
+      "computedByModelId"
     ],
     "description": "metadata for predictions computed by a model on a dataset.",
     "type": "object"
   },
-  "Parameter": {
-    "title": "Parameter",
+  "ModelMetadata": {
+    "title": "ModelMetadata",
     "properties": {
-      "value": {
+      "comments": {
         "minLength": 1,
         "type": "string",
-        "description": "value of the parameter."
+        "description": "comments for this model metadata entry."
       },
-      "typing": {
-        "$ref": "#/TypeHint",
-        "description": "type of the parameter."
+      "fromFrameworkVersion": {
+        "minLength": 1,
+        "type": "string",
+        "description": "version of the framework used to train the model."
+      },
+      "fromFramework": {
+        "minLength": 1,
+        "type": "string",
+        "description": "framework used to train the model."
+      },
+      "version": {
+        "minLength": 1,
+        "type": "string",
+        "description": "version of the model."
+      },
+      "learningAlgorithm": {
+        "minLength": 1,
+        "type": "string",
+        "description": "name of the learning algorithm that was used to train the model."
+      },
+      "trainedOnDatasetId": {
+        "minLength": 1,
+        "type": "string",
+        "description": "identifier of the dataset on which this model has been trained."
       },
       "name": {
         "minLength": 1,
         "type": "string",
-        "description": "name of the parameter."
-      }
-    },
-    "required": [
-      "name",
-      "typing",
-      "value"
-    ],
-    "description": "parameter of the feature transformation.",
-    "type": "object"
-  },
-  "Metric": {
-    "enum": [
-      "MEAN_AVERAGE_ERROR",
-      "MEAN_ABSOLUTE_PERCENTAGE_ERROR",
-      "MEAN_ABSOLUTE_SCALED_ERROR",
-      "MEAN_SQUARED_ERROR",
-      "ROOT_MEAN_SQUARED_ERROR",
-      "P50Q_LOSS",
-      "P50Q_COVERAGE",
-      "P50Q_PREDICTION",
-      "P90Q_LOSS",
-      "P90Q_COVERAGE",
-      "P90Q_PREDICTION",
-      "ACCURACY",
-      "AREA_UNDER_ROC",
-      "CLASS_AVERAGE_ACCURACY",
-      "WEIGHTED_FMEASURE",
-      "BLEU",
-      "BREVITY_PENALTY",
-      "CHRF2",
-      "CHRF3",
-      "METEOR",
-      "TER",
-      "NATIVE_REVIEW"
-    ],
-    "title": "Metric",
-    "description": "an evaluation of a prediction made with a model.",
-    "type": "string"
-  },
-  "Score": {
-    "properties": {
-      "value": {
-        "format": "double",
-        "type": "number",
-        "description": "numerical score."
+        "description": "name of this model metadata entry."
       },
-      "metric": {
-        "$ref": "#/Metric",
-        "description": "the metric for which the score was computed."
-      }
-    },
-    "required": [
-      "metric",
-      "value"
-    ],
-    "description": "score for a metric in an evaluation",
-    "type": "object"
-  },
-  "ConfusionMatrix": {
-    "properties": {
-      "values": {
-        "items": {
-          "format": "int32",
-          "type": "integer"
+      "annotations": {
+        "additionalProperties": {
+          "type": "string"
         },
-        "type": "array",
-        "description": "values of the confusion matrix in column-major order."
+        "type": "object",
+        "description": "custom key-value data to store with this model metadata entry"
       },
-      "numberOfClasses": {
-        "minimum": 1,
-        "format": "int32",
+      "creator": {
+        "minLength": 1,
+        "type": "string",
+        "description": "name of the user who created this model."
+      },
+      "creatorTeam": {
+        "minLength": 1,
+        "type": "string",
+        "description": "team of the user who created this model."
+      },
+      "creationTime": {
+        "minimum": 0,
+        "format": "int64",
         "type": "integer",
-        "description": "number of classes represented in the confusion matrix."
+        "description": "Creation time (milliseconds since 1970-01-01)."
+      },
+      "id": {
+        "minLength": 1,
+        "type": "string",
+        "description": "Unique identifier for this metadata entry."
+      },
+      "hyperparameters": {
+        "items": {
+          "$ref": "#/Parameter"
+        },
+        "description": "hyperparameters used when training the model.",
+        "type": "array"
+      },
+      "location": {
+        "minLength": 1,
+        "type": "string",
+        "description": "a pointer to a location where users can read the contents of the model."
+      },
+      "transforms": {
+        "items": {
+          "$ref": "#/Transform"
+        },
+        "description": "the transformations applied to the input data.",
+        "type": "array"
+      },
+      "input": {
+        "items": {
+          "$ref": "#/TypedColumn"
+        },
+        "description": "the input columns which this model consumes from the transformed data.",
+        "type": "array"
       }
     },
     "required": [
-      "numberOfClasses",
-      "values"
+      "creationTime",
+      "name",
+      "trainedOnDatasetId",
+      "learningAlgorithm"
     ],
-    "description": "a confusion matrix to be stored with evaluation data.",
+    "description": "Metadata for models trained on an input dataset.",
     "type": "object"
   },
-  "Grouping": {
-    "title": "Grouping",
-    "properties": {
-      "value": {
-        "minLength": 1,
-        "type": "string",
-        "description": "value of the grouping key."
-      },
-      "typing": {
-        "$ref": "#/TypeHint",
-        "description": "type of the grouping key."
-      },
-      "name": {
-        "minLength": 1,
-        "type": "string",
-        "description": "name of the grouping key."
-      }
-    },
-    "required": [
-      "name",
-      "typing",
-      "value"
+  "TrainingState": {
+    "enum": [
+      "TRAINING",
+      "FINISHED",
+      "FAILED"
     ],
-    "description": "describes a grouping key of the data used for evaluation.",
-    "type": "object"
+    "title": "TrainingState",
+    "description": "describes the state of a model during training.",
+    "type": "string"
   }
 }
